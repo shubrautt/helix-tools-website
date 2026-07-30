@@ -4,6 +4,8 @@ import {
   detectContentSourceKind,
   buildContentSource,
   diffOrgUsers,
+  validateContentSelection,
+  usersError,
 } from '../../../widgets/bot-info/wizard.js';
 
 describe('bot-info:wizard.js', () => {
@@ -142,6 +144,45 @@ describe('bot-info:wizard.js', () => {
 
     it('handles empty inputs', () => {
       assert.deepEqual(diffOrgUsers(), { toAdd: [], toRemove: [], toUpdate: [] });
+    });
+  });
+
+  describe('validateContentSelection', () => {
+    it('accepts the DA default (not advanced)', () => {
+      assert.equal(validateContentSelection({ advanced: false, url: '' }), null);
+    });
+
+    it('rejects an empty url when advanced', () => {
+      assert.equal(
+        validateContentSelection({ advanced: true, url: '   ' }),
+        'Enter a content source URL.',
+      );
+    });
+
+    it('accepts a url when advanced', () => {
+      assert.equal(
+        validateContentSelection({ advanced: true, url: 'https://example.com' }),
+        null,
+      );
+    });
+  });
+
+  describe('usersError', () => {
+    const someUsers = [{ email: 'a@b.com' }];
+
+    it('requires at least one org user for a new org', () => {
+      assert.equal(
+        usersError([], true),
+        'Add at least one organization user before saving.',
+      );
+    });
+
+    it('allows no users for an existing org (site access can be inherited)', () => {
+      assert.equal(usersError([], false), null);
+    });
+
+    it('passes when a new org has an org user', () => {
+      assert.equal(usersError(someUsers, true), null);
     });
   });
 });
